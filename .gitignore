@@ -1,0 +1,3 @@
+ports/*/pak/bin/
+dist/
+.DS_Store
