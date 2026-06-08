@@ -550,12 +550,13 @@ int main(int argc, char *argv[])
         int pad = CAT_S(6);
 
         TTF_Font *font_small = cat_get_font(CAT_FONT_SMALL);
-        TTF_Font *font_tiny  = cat_get_font(CAT_FONT_TINY);
         ap_theme *theme = cat_get_theme();
 
+        /* The bar holds the parameter line stacked ABOVE Catastrophe's footer,
+           so the footer hints never cover the parameter "menu" line. */
+        int footer_h     = cat_get_footer_height();
         int param_line_h = TTF_FontHeight(font_small);
-        int hint_line_h  = TTF_FontHeight(font_tiny);
-        int bar_h = param_line_h + hint_line_h + pad * 4;
+        int bar_h        = footer_h + param_line_h + pad * 2;
 
         /* full-screen preview, aspect-fit */
         if (state.gl_initialized) {
