@@ -552,9 +552,12 @@ int main(int argc, char *argv[])
         TTF_Font *font_small = cat_get_font(CAT_FONT_SMALL);
         ap_theme *theme = cat_get_theme();
 
-        /* The bar holds the parameter line stacked ABOVE Catastrophe's footer,
-           so the footer hints never cover the parameter "menu" line. */
-        int footer_h     = cat_get_footer_height();
+        /* Honor the launcher's button-hints setting (exported as CAT_SHOW_HINTS).
+           The bar holds the parameter line stacked ABOVE the footer, so the hints
+           never cover the parameter "menu" line; with hints off, drop the footer
+           and shrink the bar to just the parameter line. */
+        bool show_hints  = cat_hints_enabled_from_env();
+        int footer_h     = show_hints ? cat_get_footer_height() : 0;
         int param_line_h = TTF_FontHeight(font_small);
         int bar_h        = footer_h + param_line_h + pad * 2;
 
@@ -594,14 +597,16 @@ int main(int argc, char *argv[])
             cat_draw_text(font_small, val_str, sw - pad * 2 - arrow_w - pad - val_w, py, theme->text);
         }
 
-        /* footer hints */
-        cat_footer_item footer[] = {
-            { .button = CAT_BTN_B, .label = "Quit" },
-            { .button = CAT_BTN_Y, .label = "Clear" },
-            { .button = CAT_BTN_X, .label = state.use_test_pattern ? "Game Image" : "Test Pattern" },
-            { .button = CAT_BTN_A, .label = "Install", .is_confirm = true },
-        };
-        cat_draw_footer(footer, 4);
+        /* footer hints (only when the launcher has hints enabled) */
+        if (show_hints) {
+            cat_footer_item footer[] = {
+                { .button = CAT_BTN_B, .label = "Quit" },
+                { .button = CAT_BTN_Y, .label = "Clear" },
+                { .button = CAT_BTN_X, .label = state.use_test_pattern ? "Game Image" : "Test Pattern" },
+                { .button = CAT_BTN_A, .label = "Install", .is_confirm = true },
+            };
+            cat_draw_footer(footer, 4);
+        }
 
         cat_present();
     }
