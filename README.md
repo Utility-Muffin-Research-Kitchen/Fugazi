@@ -1,5 +1,11 @@
 # Fugazi (Leaf)
 
+<p align="center">
+  <a href="LICENSE"><img alt="license" src="https://img.shields.io/github/license/Utility-Muffin-Research-Kitchen/Fugazi?color=7FB069&labelColor=0F160E&cacheSeconds=3600"></a>
+  <img alt="last commit" src="https://img.shields.io/github/last-commit/Utility-Muffin-Research-Kitchen/Fugazi?color=7FB069&labelColor=0F160E&cacheSeconds=3600">
+  <img alt="platform" src="https://img.shields.io/badge/platform-Miniloong%20Pocket%201-7FB069?labelColor=0F160E&cacheSeconds=3600">
+</p>
+
 Live CRT shader tweaker for Leaf / Miniloong Pocket 1, built natively on
 Catastrophe (the Leaf UI toolkit) + OpenGL ES 2.0.
 
