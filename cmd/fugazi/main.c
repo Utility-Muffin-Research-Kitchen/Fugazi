@@ -32,6 +32,7 @@
 #include <string.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <unistd.h>
 #include <sys/stat.h>
 
@@ -91,7 +92,7 @@ static void init_params(void)
         .description="Floor between lines", .value=0.55f, .clear_val=1.0f,
         .min=0.0f, .max=1.0f, .step=0.05f, .shader=1 };
     state.params[i++] = (fugazi_param){ .name="MASK_STRENGTH", .label="Phosphor Mask",
-        .description="RGB stripe strength", .value=0.30f, .clear_val=0.0f,
+        .description="Vertical grille lines", .value=0.30f, .clear_val=0.0f,
         .min=0.0f, .max=0.6f, .step=0.05f, .shader=1 };
     state.params[i++] = (fugazi_param){ .name="VIGNETTE", .label="Vignette",
         .description="Edge darkening", .value=0.20f, .clear_val=0.0f,
@@ -225,19 +226,11 @@ static const char *preview_scan_frag_src =
     "    float scanline = 1.0 - dist * dist * adaptive_weight;\n"
     "    scanline = max(scanline, SCANLINE_GAP);\n"
     "    color *= scanline;\n"
-    "    float pixel_x = floor(TEX0.x * OutputSize.x);\n"
-    "    float phase = mod(pixel_x, 3.0);\n"
-    "    float is0 = 1.0 - step(0.5, phase);\n"
-    "    float is1 = step(0.5, phase) * (1.0 - step(1.5, phase));\n"
-    "    float is2 = step(1.5, phase);\n"
     "    float mask_fade = smoothstep(0.05, 0.25, luma);\n"
     "    float effective_mask = MASK_STRENGTH * mask_fade;\n"
-    "    float dim = 1.0 - effective_mask;\n"
-    "    vec3 mask;\n"
-    "    mask.r = is0 + (1.0 - is0) * dim;\n"
-    "    mask.g = is1 + (1.0 - is1) * dim;\n"
-    "    mask.b = is2 + (1.0 - is2) * dim;\n"
-    "    color *= mask;\n"
+    "    float gx = abs(fract(gl_FragCoord.x / 3.0) - 0.5) * 2.0;\n"
+    "    float m = 1.0 - effective_mask * gx;\n"
+    "    color *= m;\n"
     "    color.r *= 1.0 + WARMTH;\n"
     "    color.g *= 1.0 + WARMTH * 0.4;\n"
     "    color.b *= 1.0 - WARMTH * 0.6;\n"
@@ -466,18 +459,201 @@ static SDL_Texture *get_preview_as_sdl_texture(SDL_Renderer *renderer)
     return state.preview_texture;
 }
 
-/* --------------------------------------------------------- install (Phase 2) */
+/* --------------------------------------------------------- install (Phase 2)
+
+   Bake the live-tuned values into a RetroArch GLSL preset and point
+   retroarch.cfg at it. Whatever the user dialed in here is what RetroArch
+   shows — no need to tweak shader parameters in RetroArch afterward. */
+
+/* mkdir -p: create each path component, ignoring already-exists. */
+static void mkdir_p(const char *path)
+{
+    char tmp[MAX_PATH_LEN];
+    snprintf(tmp, sizeof(tmp), "%s", path);
+    for (char *p = tmp + 1; *p; p++) {
+        if (*p == '/') { *p = '\0'; mkdir(tmp, 0755); *p = '/'; }
+    }
+    mkdir(tmp, 0755);
+}
+
+/* snprintf into a fixed buffer; returns 0 on success, -1 on truncation/error.
+   Checking the result keeps the build warning-clean under -Wformat-truncation
+   and surfaces an over-long path instead of silently using a truncated one. */
+static int fz_path(char *out, size_t n, const char *fmt, ...)
+{
+    va_list ap;
+    va_start(ap, fmt);
+    int r = vsnprintf(out, n, fmt, ap);
+    va_end(ap);
+    return (r >= 0 && (size_t)r < n) ? 0 : -1;
+}
+
+/* Resolve RetroArch's state dir (…/state/retroarch) from the Leaf env. */
+static void resolve_ra_dir(char *out, size_t out_sz)
+{
+    const char *state = getenv("UMRK_INTERNAL_DATA_PATH");
+    if (state && state[0]) { snprintf(out, out_sz, "%s/retroarch", state); return; }
+    const char *plat = getenv("UMRK_PLATFORM_PATH");
+    if (!plat || !plat[0]) plat = getenv("SYSTEM_PATH");
+    if (plat && plat[0]) { snprintf(out, out_sz, "%s/state/retroarch", plat); return; }
+    const char *sd = getenv("SDCARD_PATH");
+    if (!sd || !sd[0]) sd = "/mnt/sdcard";
+    snprintf(out, out_sz, "%s/.system/leaf/platforms/mlp1/state/retroarch", sd);
+}
+
+/* Copy a template shader, rewriting each tuned param's #define with the live
+   value (param names match the shader #define names 1:1). */
+static int bake_shader(const char *src, const char *dst)
+{
+    FILE *in = fopen(src, "r");
+    if (!in) return -1;
+    FILE *out = fopen(dst, "w");
+    if (!out) { fclose(in); return -1; }
+    char line[1024];
+    while (fgets(line, sizeof(line), in)) {
+        char name[64];
+        if (sscanf(line, " #define %63s", name) == 1) {
+            int baked = 0;
+            for (int i = 0; i < state.param_count; i++) {
+                if (strcmp(state.params[i].name, name) == 0) {
+                    fprintf(out, "#define %s %.5f\n", name, state.params[i].value);
+                    baked = 1;
+                    break;
+                }
+            }
+            if (baked) continue;
+        }
+        fputs(line, out);
+    }
+    fclose(in);
+    fclose(out);
+    return 0;
+}
+
+/* Two-pass GLSL preset: glow at source res, scanline/mask at viewport res. */
+static int write_glslp(const char *path)
+{
+    FILE *f = fopen(path, "w");
+    if (!f) return -1;
+    fputs("shaders = 2\n\n"
+          "shader0 = fugazi-glow.glsl\n"
+          "filter_linear0 = true\n"
+          "scale_type0 = source\n"
+          "scale0 = 1.000000\n\n"
+          "shader1 = fugazi-scanline.glsl\n"
+          "filter_linear1 = false\n"
+          "scale_type1 = viewport\n"
+          "scale1 = 1.000000\n", f);
+    fclose(f);
+    return 0;
+}
+
+/* Point retroarch.cfg at our preset and ensure shaders are enabled. */
+static int set_video_shader(const char *cfg_path, const char *glslp_path)
+{
+    char tmp[MAX_PATH_LEN];
+    if (fz_path(tmp, sizeof(tmp), "%s.fugazi.tmp", cfg_path) != 0) return -1;
+    FILE *out = fopen(tmp, "w");
+    if (!out) return -1;
+    FILE *in = fopen(cfg_path, "r");
+    int seen_shader = 0, seen_enable = 0;
+    char line[1024];
+    if (in) {
+        while (fgets(line, sizeof(line), in)) {
+            if (strncmp(line, "video_shader ", 13) == 0 ||
+                strncmp(line, "video_shader=", 13) == 0) {
+                fprintf(out, "video_shader = \"%s\"\n", glslp_path);
+                seen_shader = 1;
+            } else if (strncmp(line, "video_shader_enable", 19) == 0) {
+                fputs("video_shader_enable = \"true\"\n", out);
+                seen_enable = 1;
+            } else {
+                fputs(line, out);
+            }
+        }
+        fclose(in);
+    }
+    if (!seen_shader) fprintf(out, "video_shader = \"%s\"\n", glslp_path);
+    if (!seen_enable) fputs("video_shader_enable = \"true\"\n", out);
+    fclose(out);
+    return rename(tmp, cfg_path);
+}
+
+/* Locate RetroArch's menu config dir (where it looks for automatic presets).
+   RA does NOT auto-load the global `video_shader` cfg value at boot -- it only
+   loads an "automatic preset" (game/core/content-dir/global) from this dir.
+   The Leaf env-contract publishes it as UMRK_RETROARCH_CONFIG_DIR (env.sh).
+   Fallback derives it the same way jawakad does: RA is launched with HOME =
+   the SD state dir (== resolve_ra_dir), so its config tree is
+   <state>/retroarch/.config/retroarch/config. */
+static void resolve_ra_config_dir(char *out, size_t out_sz)
+{
+    const char *env = getenv("UMRK_RETROARCH_CONFIG_DIR");
+    if (env && env[0]) { snprintf(out, out_sz, "%s", env); return; }
+
+    char ra_dir[MAX_PATH_LEN];
+    resolve_ra_dir(ra_dir, sizeof(ra_dir));
+    fz_path(out, out_sz, "%s/.config/retroarch/config", ra_dir);
+}
+
+/* Write RA's GLOBAL automatic preset as a one-line #reference to our preset.
+   With auto_shaders_enable=true (RA default), RA auto-loads this for every core
+   on content launch -- the actual mechanism that makes the shader auto-apply. */
+static int write_global_preset(const char *path, const char *ref_glslp)
+{
+    FILE *f = fopen(path, "w");
+    if (!f) return -1;
+    fprintf(f, "#reference \"%s\"\n", ref_glslp);
+    fclose(f);
+    return 0;
+}
 
 static void install_to_system(void)
 {
-    /* Phase 2: write a RetroArch .glslp preset + point retroarch.cfg at it.
-       Stubbed for Phase 1 so the action is visible but honest. */
+    char ra_dir[MAX_PATH_LEN], shader_dir[MAX_PATH_LEN];
+    char glslp[MAX_PATH_LEN], cfg[MAX_PATH_LEN];
+    char src_glow[MAX_PATH_LEN], src_scan[MAX_PATH_LEN];
+    char dst_glow[MAX_PATH_LEN], dst_scan[MAX_PATH_LEN];
+    char ra_cfg_dir[MAX_PATH_LEN], global_preset[MAX_PATH_LEN];
+
+    resolve_ra_dir(ra_dir, sizeof(ra_dir));
+    resolve_ra_config_dir(ra_cfg_dir, sizeof(ra_cfg_dir));
+
+    const char *msg;
+    if (fz_path(shader_dir, sizeof(shader_dir), "%s/.config/retroarch/shaders/fugazi", ra_dir) != 0 ||
+        fz_path(cfg, sizeof(cfg), "%s/retroarch.cfg", ra_dir) != 0 ||
+        fz_path(glslp, sizeof(glslp), "%s/fugazi.glslp", shader_dir) != 0 ||
+        fz_path(src_glow, sizeof(src_glow), "%s/shaders/fugazi-glow.glsl", state.pak_dir) != 0 ||
+        fz_path(src_scan, sizeof(src_scan), "%s/shaders/fugazi-scanline.glsl", state.pak_dir) != 0 ||
+        fz_path(dst_glow, sizeof(dst_glow), "%s/fugazi-glow.glsl", shader_dir) != 0 ||
+        fz_path(dst_scan, sizeof(dst_scan), "%s/fugazi-scanline.glsl", shader_dir) != 0 ||
+        fz_path(global_preset, sizeof(global_preset), "%s/global.glslp", ra_cfg_dir) != 0) {
+        cat_log("fugazi: install failed - a system path was too long");
+        msg = "Install failed: a system path was too long.";
+    } else {
+        mkdir_p(shader_dir);
+        if (bake_shader(src_glow, dst_glow) != 0 || bake_shader(src_scan, dst_scan) != 0) {
+            cat_log("fugazi: install failed baking shaders (pak_dir=%s)", state.pak_dir);
+            msg = "Install failed: couldn't write the shader files.";
+        } else if (write_glslp(glslp) != 0) {
+            msg = "Install failed: couldn't write the preset.";
+        } else if ((mkdir_p(ra_cfg_dir), write_global_preset(global_preset, glslp)) != 0) {
+            cat_log("fugazi: shaders written but global preset failed (%s)", global_preset);
+            msg = "Shader saved, but enabling it in RetroArch failed.";
+        } else {
+            /* Best-effort: also set the menu's last-loaded preset (cosmetic; RA does
+               not auto-load this at boot -- the global preset above is what applies). */
+            set_video_shader(cfg, glslp);
+            cat_log("fugazi: installed shader -> %s (global preset %s)", glslp, global_preset);
+            msg = "Installed. Your CRT shader is now active in\nRetroArch — launch a game to see it.";
+        }
+    }
+
     cat_footer_item footer[1] = {
         { .button = CAT_BTN_A, .label = "OK", .is_confirm = true },
     };
     cat_message_opts opts = {
-        .message = "In-game install is coming soon.\nFor now Fugazi is a live tuner.",
-        .footer = footer, .footer_count = 1,
+        .message = msg, .footer = footer, .footer_count = 1,
     };
     cat_confirm_result r;
     cat_confirmation(&opts, &r);
@@ -508,8 +684,9 @@ int main(int argc, char *argv[])
     cat_log("fugazi: startup, pak_dir=%s", state.pak_dir);
 
     char preview_path[MAX_PATH_LEN];
-    snprintf(preview_path, sizeof(preview_path), "%s/res/preview.png", state.pak_dir);
-    if (init_gl_preview(preview_path) != 0)
+    if (fz_path(preview_path, sizeof(preview_path), "%s/res/preview.png", state.pak_dir) != 0)
+        cat_log("fugazi: preview path too long - running without preview");
+    else if (init_gl_preview(preview_path) != 0)
         cat_log("fugazi: GL preview init failed - running without preview");
 
     SDL_Renderer *renderer = cat_get_renderer();
