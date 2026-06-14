@@ -8,7 +8,8 @@
  *
  * Controls:
  *   Up/Down     cycle parameters
- *   Left/Right  adjust the selected parameter
+ *   Left/Right  adjust the selected parameter (fine)
+ *   L1/R1       adjust the selected parameter (coarse)
  *   X           toggle game image vs built-in test pattern
  *   Y           clear all effects (passthrough)
  *   A           install to system (RetroArch) — Phase 2
@@ -117,6 +118,20 @@ static void clear_all_params(void)
 {
     for (int i = 0; i < state.param_count; i++)
         state.params[i].value = state.params[i].clear_val;
+}
+
+/* L1/R1 move the selected parameter in bigger jumps than Left/Right -- handy on a
+   small handheld for coarse swings before fine-tuning with the d-pad. */
+#define FUGAZI_COARSE_STEPS 5.0f
+
+/* Nudge the selected parameter by `units` of its step (negative = down), clamped
+   to its range. Left/Right pass +/-1; L1/R1 pass +/- the coarse multiple. */
+static void adjust_param(float units)
+{
+    fugazi_param *p = &state.params[state.cursor];
+    p->value += units * p->step;
+    if (p->value < p->min) p->value = p->min;
+    if (p->value > p->max) p->value = p->max;
 }
 
 /* ----------------------------------------------------------- GLES engine */
@@ -700,14 +715,10 @@ int main(int argc, char *argv[])
                 case CAT_BTN_B:    if (!ev.repeated) running = 0; break;
                 case CAT_BTN_UP:   state.cursor = (state.cursor - 1 + state.param_count) % state.param_count; break;
                 case CAT_BTN_DOWN: state.cursor = (state.cursor + 1) % state.param_count; break;
-                case CAT_BTN_LEFT: {
-                    fugazi_param *p = &state.params[state.cursor];
-                    p->value -= p->step; if (p->value < p->min) p->value = p->min;
-                    break; }
-                case CAT_BTN_RIGHT: {
-                    fugazi_param *p = &state.params[state.cursor];
-                    p->value += p->step; if (p->value > p->max) p->value = p->max;
-                    break; }
+                case CAT_BTN_LEFT:  adjust_param(-1.0f); break;
+                case CAT_BTN_RIGHT: adjust_param(+1.0f); break;
+                case CAT_BTN_L1:    adjust_param(-FUGAZI_COARSE_STEPS); break;
+                case CAT_BTN_R1:    adjust_param(+FUGAZI_COARSE_STEPS); break;
                 case CAT_BTN_A: if (!ev.repeated) install_to_system(); break;
                 case CAT_BTN_Y: if (!ev.repeated) clear_all_params(); break;
                 case CAT_BTN_X: if (!ev.repeated) state.use_test_pattern = !state.use_test_pattern; break;
