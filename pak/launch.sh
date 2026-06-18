@@ -11,8 +11,11 @@ done
 
 BIN="$PAK_DIR/bin/fugazi"
 export FUGAZI_PAK_DIR="$PAK_DIR"
-LOG_DIR="${LOGS_PATH:-$PAK_DIR}"
-mkdir -p "$LOG_DIR" 2>/dev/null || true
+# Logs belong in the durable user-data tree, never the release-managed pak dir.
+# Prefer the env's LOGS_PATH, else USERDATA_PATH/logs, else the SD-root default;
+# fall back to /tmp only if that can't be created (so the app still launches).
+LOG_DIR="${LOGS_PATH:-${USERDATA_PATH:-${SDCARD_PATH:-/mnt/sdcard}/.userdata/$PLATFORM}/logs}"
+mkdir -p "$LOG_DIR" 2>/dev/null || LOG_DIR=/tmp
 
 cd "$PAK_DIR"
 exec "$BIN" 2>"$LOG_DIR/fugazi.log"
