@@ -510,7 +510,9 @@ static void resolve_ra_dir(char *out, size_t out_sz)
     if (state && state[0]) { snprintf(out, out_sz, "%s/retroarch", state); return; }
     const char *sd = getenv("SDCARD_PATH");
     if (!sd || !sd[0]) sd = "/mnt/sdcard";
-    snprintf(out, out_sz, "%s/.umrk/mlp1/retroarch", sd);
+    const char *plat = getenv("PLATFORM");
+    if (!plat || !plat[0]) plat = "mlp1";
+    snprintf(out, out_sz, "%s/.umrk/%s/retroarch", sd, plat);
 }
 
 /* Copy a template shader, rewriting each tuned param's #define with the live
