@@ -7,11 +7,19 @@ FUGAZI   ?= /workspace/Fugazi
 CATA     ?= /workspace/Catastrophe
 CJSON    ?= /workspace/Jawaka/third_party/cjson
 OUT      := $(FUGAZI)/ports/mlp1/pak/bin/fugazi
+MLP1_BUILD_PROFILE ?= release
+MLP1_FLAGS_MK ?= $(firstword $(wildcard /opt/mlp1-toolchain/umrk/mlp1-build-flags.mk /workspace/mlp1-toolchain/flags/mlp1-build-flags.mk))
+ifneq ($(MLP1_FLAGS_MK),)
+include $(MLP1_FLAGS_MK)
+else
+UMRK_MLP1_PROFILE_CFLAGS ?= -O2 -mcpu=cortex-a55 -mtune=cortex-a55 -ffunction-sections -fdata-sections -DNDEBUG
+UMRK_MLP1_PROFILE_LDFLAGS ?= -Wl,--gc-sections
+endif
 
-CFLAGS  := -std=gnu11 -O2 -Wall -Wextra -Wno-unused-parameter -DPLATFORM_MLP1 \
+CFLAGS  := -std=gnu11 $(UMRK_MLP1_PROFILE_CFLAGS) -Wall -Wextra -Wno-unused-parameter -DPLATFORM_MLP1 \
            -I$(FUGAZI)/cmd/fugazi -I$(CATA)/include -I$(CJSON) \
            -I$(SYSROOT)/usr/include -I$(SYSROOT)/usr/include/SDL2
-LDFLAGS := -L$(SYSROOT)/usr/lib -lSDL2 -lSDL2_ttf -lSDL2_image -lGLESv2 -lEGL -lm -lpthread
+LDFLAGS := $(UMRK_MLP1_PROFILE_LDFLAGS) -L$(SYSROOT)/usr/lib -lSDL2 -lSDL2_ttf -lSDL2_image -lGLESv2 -lEGL -lm -lpthread
 
 .PHONY: all clean
 all:

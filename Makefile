@@ -6,6 +6,17 @@
 
 MLP1_PACKAGE := build/mlp1/package/Fugazi.pak
 MLP1_BIN     := ports/mlp1/pak/bin/fugazi
+MLP1_BUILD_PROFILE ?= release
+WORKSPACE_ROOT ?= $(abspath ..)
+MLP1_FLAGS_MK ?= $(firstword $(wildcard /opt/mlp1-toolchain/umrk/mlp1-build-flags.mk $(WORKSPACE_ROOT)/mlp1-toolchain/flags/mlp1-build-flags.mk ../mlp1-toolchain/flags/mlp1-build-flags.mk))
+ifneq ($(MLP1_FLAGS_MK),)
+include $(MLP1_FLAGS_MK)
+else
+UMRK_MLP1_TARGET_SOC ?= rk3566
+UMRK_MLP1_TARGET_CPU ?= cortex-a55
+UMRK_MLP1_PROFILE_CFLAGS ?= -O2 -mcpu=cortex-a55 -mtune=cortex-a55 -ffunction-sections -fdata-sections -DNDEBUG
+UMRK_MLP1_PROFILE_LDFLAGS ?= -Wl,--gc-sections
+endif
 
 .PHONY: package-platform package-mlp1 mlp1 clean
 
@@ -18,7 +29,7 @@ package-platform:
 
 # Cross-compile the aarch64 binary (Docker mlp1-toolchain).
 mlp1:
-	@./scripts/build-mlp1.sh
+	@MLP1_BUILD_PROFILE="$(MLP1_BUILD_PROFILE)" ./scripts/build-mlp1.sh
 
 # Build, then assemble the staged pak: pak/ template + the built binary.
 package-mlp1: mlp1
@@ -26,6 +37,18 @@ package-mlp1: mlp1
 	@mkdir -p "$(MLP1_PACKAGE)/bin"
 	@cp -R pak/launch.sh pak/pak.json pak/res pak/shaders "$(MLP1_PACKAGE)/"
 	@cp "$(MLP1_BIN)" "$(MLP1_PACKAGE)/bin/fugazi"
+	@{ \
+		printf '{\n'; \
+		printf '  "platform": "mlp1",\n'; \
+		printf '  "target_soc": "%s",\n' "$(UMRK_MLP1_TARGET_SOC)"; \
+		printf '  "target_cpu": "%s",\n' "$(UMRK_MLP1_TARGET_CPU)"; \
+		printf '  "build_profile": "%s",\n' "$(MLP1_BUILD_PROFILE)"; \
+		printf '  "cflags": "%s",\n' "$(UMRK_MLP1_PROFILE_CFLAGS)"; \
+		printf '  "ldflags": "%s",\n' "$(UMRK_MLP1_PROFILE_LDFLAGS)"; \
+		printf '  "binaries": ["bin/fugazi"],\n'; \
+		printf '  "exceptions": []\n'; \
+		printf '}\n'; \
+	} > "$(MLP1_PACKAGE)/build-manifest.json"
 	@echo "=== Packaged: $(MLP1_PACKAGE) ==="
 
 clean:

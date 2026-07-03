@@ -5,5 +5,5 @@ FUGAZI_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 WORKSPACE="$(cd "$FUGAZI_DIR/.." && pwd)"   # siblings: Fugazi, Catastrophe, Jawaka
 IMAGE="${MLP1_TOOLCHAIN_IMAGE:-ghcr.io/utility-muffin-research-kitchen/mlp1-toolchain:latest}"
 echo "=== Building Fugazi for MLP1 (workspace: $WORKSPACE) ==="
-docker run --rm -v "$WORKSPACE":/workspace -w /workspace/Fugazi "$IMAGE" make -C ports/mlp1
+docker run --rm -e MLP1_BUILD_PROFILE="${MLP1_BUILD_PROFILE:-release}" -v "$WORKSPACE":/workspace -w /workspace/Fugazi "$IMAGE" make -C ports/mlp1
 echo "=== Build complete: ports/mlp1/pak/bin/fugazi ==="
