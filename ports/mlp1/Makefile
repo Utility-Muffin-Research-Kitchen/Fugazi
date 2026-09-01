@@ -24,6 +24,7 @@ LDFLAGS := $(UMRK_MLP1_PROFILE_LDFLAGS) -L$(SYSROOT)/usr/lib -lSDL2 -lSDL2_ttf -
 .PHONY: all clean
 all:
 	mkdir -p $(dir $(OUT))
-	$(CC) $(CFLAGS) -o $(OUT) $(FUGAZI)/cmd/fugazi/main.c $(CJSON)/cJSON.c $(LDFLAGS)
+	$(CC) $(CFLAGS) -o $(OUT) $(FUGAZI)/cmd/fugazi/main.c \
+		$(FUGAZI)/cmd/fugazi/preset_ownership.c $(CJSON)/cJSON.c $(LDFLAGS)
 clean:
 	rm -f $(OUT)

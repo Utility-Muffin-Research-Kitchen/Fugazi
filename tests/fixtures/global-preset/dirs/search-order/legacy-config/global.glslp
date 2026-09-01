@@ -1,0 +1,15 @@
+shaders = 1
+shader0 = "shaders_glsl/crt/shaders/zfast_crt.glsl"
+filter_linear0 = false
+wrap_mode0 = "clamp_to_border"
+mipmap_input0 = false
+alias0 = ""
+float_framebuffer0 = false
+srgb_framebuffer0 = false
+parameters = "BLURSCALEX;LOWLUMSCAN;HILUMSCAN;BRIGHTBOOST;MASK_DARK;MASK_FADE"
+BLURSCALEX = "0.450000"
+LOWLUMSCAN = "5.000000"
+HILUMSCAN = "10.000000"
+BRIGHTBOOST = "1.250000"
+MASK_DARK = "0.250000"
+MASK_FADE = "0.800000"
