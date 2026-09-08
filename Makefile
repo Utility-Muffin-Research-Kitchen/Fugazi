@@ -18,7 +18,16 @@ UMRK_MLP1_PROFILE_CFLAGS ?= -O2 -mcpu=cortex-a55 -mtune=cortex-a55 -ffunction-se
 UMRK_MLP1_PROFILE_LDFLAGS ?= -Wl,--gc-sections
 endif
 
-.PHONY: package-platform package-mlp1 mlp1 preset-ownership-test clean
+.PHONY: package-platform package-mlp1 mlp1 preset-ownership-test i18n-pot i18n-build i18n-check clean
+
+i18n-pot:
+	python3 tools/i18n-extract.py
+
+i18n-build:
+	python3 tools/i18n-po2tsv.py i18n/zh_CN.po -o build/i18n/zh_CN.tsv
+
+i18n-check: i18n-build
+	python3 tools/i18n-extract.py --check --po i18n/zh_CN.po --gate 90
 
 # Native test for the global-preset ownership module. No SDL, no GL, no device:
 # it runs on the host against tests/fixtures/global-preset.
@@ -43,11 +52,12 @@ mlp1:
 	@MLP1_BUILD_PROFILE="$(MLP1_BUILD_PROFILE)" ./scripts/build-mlp1.sh
 
 # Build, then assemble the staged pak: pak/ template + the built binary.
-package-mlp1: mlp1
+package-mlp1: mlp1 i18n-check
 	@rm -rf "$(MLP1_PACKAGE)"
-	@mkdir -p "$(MLP1_PACKAGE)/bin"
+	@mkdir -p "$(MLP1_PACKAGE)/bin" "$(MLP1_PACKAGE)/res/i18n"
 	@cp -R pak/launch.sh pak/pak.json pak/res pak/shaders "$(MLP1_PACKAGE)/"
 	@cp "$(MLP1_BIN)" "$(MLP1_PACKAGE)/bin/fugazi"
+	@cp build/i18n/*.tsv "$(MLP1_PACKAGE)/res/i18n/"
 	@{ \
 		printf '{\n'; \
 		printf '  "platform": "mlp1",\n'; \
