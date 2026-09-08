@@ -25,6 +25,6 @@ LDFLAGS := $(UMRK_MLP1_PROFILE_LDFLAGS) -L$(SYSROOT)/usr/lib -lSDL2 -lSDL2_ttf -
 all:
 	mkdir -p $(dir $(OUT))
 	$(CC) $(CFLAGS) -o $(OUT) $(FUGAZI)/cmd/fugazi/main.c \
-		$(FUGAZI)/cmd/fugazi/preset_ownership.c $(CJSON)/cJSON.c $(LDFLAGS)
+		$(FUGAZI)/cmd/fugazi/preset_ownership.c $(FUGAZI)/cmd/fugazi/i18n.c $(CJSON)/cJSON.c $(LDFLAGS)
 clean:
 	rm -f $(OUT)

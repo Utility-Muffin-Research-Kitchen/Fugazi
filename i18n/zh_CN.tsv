@@ -1,0 +1,33 @@
+# Fugazi zh_CN translation
+Curvature	曲率
+Glow	辉光
+Scanlines	扫描线
+Gap Darkness	间隙暗度
+Phosphor Mask	荧光面罩
+Vignette	暗角
+Brightness	亮度
+Warmth	暖色
+Cancel	取消
+Choose	选择
+Keep current	保留当前
+Restore previous	恢复之前
+Quit	退出
+Reset	重置
+Image	图像
+Pattern	图案
+Apply	应用
+Remove	移除
+Resolve	解决
+Preview not available	预览不可用
+Not applied	未应用
+Applied globally	已全局应用
+State needs attention	状态需要处理
+OK	确定
+Applied globally — previous shader preserved	已全局应用——已保留之前的着色器
+Another global shader is active	另一个全局着色器正在使用
+Fugazi is not applied.	Fugazi 尚未应用。
+Keep current	保留当前
+Restore previous	恢复之前
+Change nothing	不作更改
+Delete backup	删除备份
+Replace	替换
