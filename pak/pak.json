@@ -2,7 +2,7 @@
   "name": "Fugazi",
   "icon": "res/icon.png",
   "platform": "mlp1",
-  "pak_version": "0.1.0",
+  "pak_version": "0.2.0",
   "min_jawaka_version": "0.0.1",
   "author": "Geekstrada",
   "description": "Live CRT shader tuner, adjusting curvature, glow, scanlines, mask, vignette, brightness and warmth against a full-screen preview, then installing the result so it applies in every RetroArch game."

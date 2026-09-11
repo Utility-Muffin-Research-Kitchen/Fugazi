@@ -1,0 +1,2 @@
+#reference "../shaders/fugazi/fugazi.glslp"
+shaders = 1

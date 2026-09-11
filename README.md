@@ -11,27 +11,63 @@ Catastrophe (the Leaf UI toolkit) + OpenGL ES 2.0.
 
 Adjust curvature, glow, scanlines, gap darkness, mask, vignette, brightness and
 warmth against a full-screen live preview rendered through the shader, then
-install your tuning so it applies automatically in every RetroArch game — no
+install your tuning so it applies automatically in every RetroArch game - no
 need to touch RetroArch's shader menus. The CRT effect model is shared with the
 original NextUI Fugazi; the app shell, UI and packaging are Leaf-native.
 
 ## Controls
 
-- **Up / Down** — select a parameter
-- **Left / Right** — adjust the selected parameter
-- **X** — toggle between the game image and the test pattern
-- **Y** — clear all parameters (reset to no visible effect)
-- **A** — install (bake the current tuning into RetroArch)
-- **B** — quit
+- **Up / Down** - select a parameter
+- **Left / Right** - adjust the selected parameter
+- **X** - toggle between the game image and the test pattern
+- **Y** - reset the tuning values (back to no visible effect)
+- **A** - apply (bake the current tuning into RetroArch)
+- **START** - remove Fugazi, or resolve a conflicting preset state
+- **B** - quit
 
-## How install works
+**Reset is not an uninstall.** `Y` only returns the tuning values to their
+no-effect defaults; the shader stays applied in RetroArch. Removing Fugazi is
+`START`, and it appears in the footer only when there is something to remove.
 
-Install bakes the eight live values into a two-pass GLSL preset on the SD card
+## How apply works
+
+Apply bakes the eight live values into a two-pass GLSL preset on the SD card
 and registers it as RetroArch's **global automatic preset** (`global.glslp`), so
 the shader loads for every core on the next game launch. RetroArch does not
 auto-load the global `video_shader` config value at boot; the automatic preset
 in its config dir is the mechanism that does. The config dir comes from the Leaf
 env contract (`UMRK_RETROARCH_CONFIG_DIR`), so no device paths are hardcoded.
+
+Fugazi no longer writes `video_shader` or `video_shader_enable` into
+`retroarch.cfg`. Jawaka protects `video_shader_enable` in the launch config
+because RetroArch will otherwise skip automatic shader discovery when a saved
+value is false. Fugazi owns the automatic preset, not that launch-time gate.
+
+## Ownership: Fugazi will not eat your preset
+
+A global preset is durable user state, so Fugazi acts only on one it recognizes
+as its own - decided from the file's **content**, not from the file existing.
+The status line above the parameter row always says which of these is true:
+
+| Status | Meaning |
+| --- | --- |
+| `Not applied` | No global preset. Apply installs one |
+| `Applied globally` | Fugazi owns the global preset |
+| `Applied globally - previous shader preserved` | Fugazi owns it and is holding one preset it displaced. Remove restores that preset |
+| `Another global shader is active` | Someone else's preset. Apply asks before replacing it; Remove refuses outright |
+| `State needs attention` | Another preset is active *and* Fugazi still holds a backup. Press START for the resolver |
+
+When Apply replaces a preset Fugazi does not own, it first moves that file to
+`global.glslp.fugazi-backup` beside it, and `Remove` puts it back byte-for-byte.
+Only one predecessor is kept. If a second replacement would destroy it, Apply
+stops and opens a resolver offering exactly **Keep current**, **Restore
+previous**, or **Cancel**, each naming the file it discards. Cancel leaves both
+files untouched.
+
+Ownership and the atomic install/remove operations are covered by a native
+test that needs no device:
+
+    make preset-ownership-test
 
 ## Build (MLP1)
 

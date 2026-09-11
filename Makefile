@@ -18,7 +18,18 @@ UMRK_MLP1_PROFILE_CFLAGS ?= -O2 -mcpu=cortex-a55 -mtune=cortex-a55 -ffunction-se
 UMRK_MLP1_PROFILE_LDFLAGS ?= -Wl,--gc-sections
 endif
 
-.PHONY: package-platform package-mlp1 mlp1 clean
+.PHONY: package-platform package-mlp1 mlp1 preset-ownership-test clean
+
+# Native test for the global-preset ownership module. No SDL, no GL, no device:
+# it runs on the host against tests/fixtures/global-preset.
+HOST_CC ?= cc
+PRESET_TEST_BIN := build/preset-ownership-test
+
+preset-ownership-test:
+	@mkdir -p build
+	$(HOST_CC) -std=gnu11 -Wall -Wextra -Werror -O1 -g -Icmd/fugazi \
+		-o $(PRESET_TEST_BIN) tests/preset_ownership_test.c cmd/fugazi/preset_ownership.c
+	@./$(PRESET_TEST_BIN) tests/fixtures/global-preset
 
 package-platform:
 	@test -n "$(PLATFORM)" || { echo "usage: make package-platform PLATFORM=<platform>" >&2; exit 1; }
