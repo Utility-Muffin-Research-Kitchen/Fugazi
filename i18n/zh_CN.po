@@ -1,0 +1,249 @@
+# Simplified Chinese translation for Fugazi.
+msgid ""
+msgstr "Content-Type: text/plain; charset=UTF-8\n"
+
+msgid "Screen edge bend"
+msgstr "屏幕边缘弯曲"
+
+msgid "Soft light bleed"
+msgstr "柔和光晕"
+
+msgid "Dark line strength"
+msgstr "暗线强度"
+
+msgid "Gap Darkness"
+msgstr "间隙暗度"
+
+msgid "Floor between lines"
+msgstr "线条之间的暗部"
+
+msgid "Phosphor Mask"
+msgstr "荧光面罩"
+
+msgid "Vertical grille lines"
+msgstr "垂直栅格线"
+
+msgid "Edge darkening"
+msgstr "边缘变暗"
+
+msgid "Output gain"
+msgstr "输出增益"
+
+msgid "Warm color tint"
+msgstr "暖色调"
+
+msgid "Not applied"
+msgstr "未应用"
+
+msgid "Applied globally"
+msgstr "已全局应用"
+
+msgid "Applied globally — previous shader preserved"
+msgstr "已全局应用——已保留之前的着色器"
+
+msgid "Another global shader is active"
+msgstr "另一个全局着色器正在使用"
+
+msgid "State needs attention"
+msgstr "状态需要处理"
+
+msgid "Applied globally — 1 preset saved"
+msgstr "已全局应用——已保存 1 个预设"
+
+msgid "Remove"
+msgstr "移除"
+
+msgid "Resolve"
+msgstr "解决"
+
+msgid "OK"
+msgstr "确定"
+
+msgid "Cancel"
+msgstr "取消"
+
+msgid "Couldn't update RetroArch's shader settings:\na system path was too long. Nothing changed."
+msgstr "无法更新 RetroArch 的着色器设置：\n系统路径过长，未进行任何更改。"
+
+msgid "Couldn't update RetroArch's shader settings.\nNothing was changed."
+msgstr "无法更新 RetroArch 的着色器设置。\n未进行任何更改。"
+
+msgid "Fugazi did not install the global shader that is\nactive, so it will not remove it."
+msgstr "当前启用的全局着色器不是 Fugazi 安装的，\n因此不会将其移除。"
+
+msgid "Fugazi is not applied."
+msgstr "Fugazi 尚未应用。"
+
+msgid "Couldn't update RetroArch's shader settings."
+msgstr "无法更新 RetroArch 的着色器设置。"
+
+msgid "Couldn't locate RetroArch's shader settings.\nNothing was changed."
+msgstr "找不到 RetroArch 的着色器设置。\n未进行任何更改。"
+
+msgid "Fugazi couldn't read RetroArch's global shader\npreset. Check the file in RetroArch, then try again."
+msgstr "Fugazi 无法读取 RetroArch 的全局着色器\n预设。请在 RetroArch 中检查该文件后重试。"
+
+msgid "Keep current"
+msgstr "保留当前"
+
+msgid "Discard Fugazi's saved backup"
+msgstr "丢弃 Fugazi 保存的备份"
+
+msgid "Restore previous"
+msgstr "恢复之前的预设"
+
+msgid "Discard the preset now in place"
+msgstr "丢弃当前使用的预设"
+
+msgid "Change nothing"
+msgstr "不作更改"
+
+msgid "Choose"
+msgstr "选择"
+
+msgid "A global shader preset that Fugazi did not install is\n"
+msgstr "当前启用的全局着色器预设不是 Fugazi 安装的，\n"
+
+msgid "active, and Fugazi still holds a backup of an earlier\n"
+msgstr "而 Fugazi 仍保留着更早预设的备份。\n"
+
+msgid "one. Only one can be kept."
+msgstr "两者只能保留一个。"
+
+msgid "Keep the preset that is active now?\n\n"
+msgstr "保留当前启用的预设？\n\n"
+
+msgid "Fugazi's backup of the earlier preset will be\n"
+msgstr "Fugazi 对早期预设的备份将被\n"
+
+msgid "deleted. This cannot be undone."
+msgstr "删除，此操作无法撤销。"
+
+msgid "Delete backup"
+msgstr "删除备份"
+
+msgid "Replace"
+msgstr "替换"
+
+msgid "Restore the earlier preset?\n\n"
+msgstr "恢复早期预设？\n\n"
+
+msgid "The global shader preset that is active now will be\n"
+msgstr "当前启用的全局着色器预设将被 Fugazi 的备份\n"
+
+msgid "REPLACED by Fugazi's backup and cannot be\n"
+msgstr "替换且无法\n"
+
+msgid "recovered. Restore it?"
+msgstr "恢复。是否继续？"
+
+msgid "Done. Fugazi is not applied — press A to apply it."
+msgstr "完成。Fugazi 尚未应用——按 A 应用。"
+
+msgid "Apply failed: a system path was too long."
+msgstr "应用失败：系统路径过长。"
+
+msgid "Apply failed: couldn't write the shader files."
+msgstr "应用失败：无法写入着色器文件。"
+
+msgid "Apply failed: couldn't write the preset."
+msgstr "应用失败：无法写入预设。"
+
+msgid "Another global shader preset is already active.\n\n"
+msgstr "另一个全局着色器预设已处于启用状态。\n\n"
+
+msgid "Apply Fugazi and replace it? Fugazi keeps one copy\n"
+msgstr "应用 Fugazi 并替换它？Fugazi 会保留一份\n"
+
+msgid "of that preset so you can restore it later."
+msgstr "该预设的副本，以便稍后恢复。"
+
+msgid "Applied. Your CRT shader is now active in\n"
+msgstr "已应用。你的 CRT 着色器现已在\n"
+
+msgid "RetroArch — launch a game to see it.\n\n"
+msgstr "RetroArch 中启用——启动游戏即可查看。\n\n"
+
+msgid "The preset it replaced is saved; Remove restores it."
+msgstr "被替换的预设已保存；点击“移除”即可恢复。"
+
+msgid "Applied. Your CRT shader is now active in\nRetroArch — launch a game to see it.\n\nThe preset it replaced is saved; Remove restores it."
+msgstr "已应用。你的 CRT 着色器现已在\nRetroArch 中启用——启动游戏即可查看。\n\n被替换的预设已保存；点击“移除”即可恢复。"
+
+msgid "RetroArch — launch a game to see it."
+msgstr "RetroArch 中启用——启动游戏即可查看。"
+
+msgid "Applied. Your CRT shader is now active in\nRetroArch — launch a game to see it."
+msgstr "已应用。你的 CRT 着色器现已在\nRetroArch 中启用——启动游戏即可查看。"
+
+msgid "Another global shader preset is active and Fugazi\n"
+msgstr "另一个全局着色器预设正在使用，而 Fugazi\n"
+
+msgid "did not install it, so Fugazi will not remove it.\n\n"
+msgstr "并未安装它，因此 Fugazi 不会将其移除。\n\n"
+
+msgid "Remove it in RetroArch under Shaders."
+msgstr "请在 RetroArch 的“着色器”菜单中移除它。"
+
+msgid "Remove Fugazi's shader?\n\n"
+msgstr "要移除 Fugazi 的着色器吗？\n\n"
+
+msgid "No global shader will be applied in RetroArch\n"
+msgstr "RetroArch 中将不会应用全局着色器，\n"
+
+msgid "The global shader preset that Fugazi replaced\n"
+msgstr "Fugazi 替换的全局着色器预设\n"
+
+msgid "will be restored in its place."
+msgstr "将恢复到原位置。"
+
+msgid "Removed. The global shader preset Fugazi replaced\nis active again."
+msgstr "已移除。Fugazi 替换的全局着色器预设\n已重新启用。"
+
+msgid "Removed. No global shader is applied in RetroArch."
+msgstr "已移除。RetroArch 中未应用全局着色器。"
+
+msgid "A global shader preset that Fugazi did not install is\nactive, and Fugazi still holds a backup of an earlier\none. Only one can be kept."
+msgstr "当前启用的全局着色器预设不是 Fugazi 安装的，\n而 Fugazi 仍保留着更早预设的备份。\n两者只能保留一个。"
+
+msgid "Keep the preset that is active now?\n\nFugazi's backup of the earlier preset will be\ndeleted. This cannot be undone."
+msgstr "保留当前启用的预设？\n\nFugazi 对早期预设的备份将被\n删除，此操作无法撤销。"
+
+msgid "Restore the earlier preset?\n\nThe global shader preset that is active now will be\nREPLACED by Fugazi's backup and cannot be\nrecovered. Restore it?"
+msgstr "恢复早期预设？\n\n当前启用的全局着色器预设将被 Fugazi 的备份\n替换且无法\n恢复。是否继续？"
+
+msgid "Another global shader preset is already active.\n\nApply Fugazi and replace it? Fugazi keeps one copy\nof that preset so you can restore it later."
+msgstr "另一个全局着色器预设已处于启用状态。\n\n应用 Fugazi 并替换它？Fugazi 会保留一份\n该预设的副本，以便稍后恢复。"
+
+msgid "Another global shader preset is active and Fugazi\ndid not install it, so Fugazi will not remove it.\n\nRemove it in RetroArch under Shaders."
+msgstr "另一个全局着色器预设正在使用，而 Fugazi\n并未安装它，因此 Fugazi 不会将其移除。\n\n请在 RetroArch 的“着色器”菜单中移除它。"
+
+msgid "Remove Fugazi's shader?\n\nNo global shader will be applied in RetroArch\nafterwards."
+msgstr "要移除 Fugazi 的着色器吗？\n\n之后 RetroArch 中将不会应用全局着色器。"
+
+msgid "Remove Fugazi's shader?\n\nThe global shader preset that Fugazi replaced\nwill be restored in its place."
+msgstr "要移除 Fugazi 的着色器吗？\n\nFugazi 替换的全局着色器预设\n将恢复到原位置。"
+
+msgid "Fugazi"
+msgstr "Fugazi"
+
+msgid "Fugazi: failed to initialise Catastrophe\n"
+msgstr "Fugazi：Catastrophe 初始化失败\n"
+
+msgid "Preview not available"
+msgstr "预览不可用"
+
+msgid "Reset"
+msgstr "重置"
+
+msgid "Quit"
+msgstr "退出"
+
+msgid "Image"
+msgstr "图像"
+
+msgid "Pattern"
+msgstr "图案"
+
+msgid "Apply"
+msgstr "应用"

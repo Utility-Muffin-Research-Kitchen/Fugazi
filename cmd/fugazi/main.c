@@ -36,6 +36,7 @@
 #include <SDL2/SDL_image.h>
 
 #include "preset_ownership.h"
+#include "i18n.h"
 
 #include <string.h>
 #include <stdio.h>
@@ -43,6 +44,19 @@
 #include <stdarg.h>
 #include <unistd.h>
 #include <sys/stat.h>
+
+/* Translate at the Catastrophe boundary so dialogs, menus and footer hints
+ * also cover text assembled by the ownership workflow. */
+static void fz_i18n_footer(cat_footer_item *footer, int count) {
+    int i; for (i = 0; footer && i < count; ++i) footer[i].label = T(footer[i].label);
+}
+static void fz_i18n_message(cat_message_opts *opts) {
+    if (!opts) return; if (opts->message) opts->message = T(opts->message); fz_i18n_footer(opts->footer, opts->footer_count);
+}
+#define cat_confirmation(opts, result) (fz_i18n_message((opts)), cat_confirmation((opts), (result)))
+#define cat_draw_text(font, text, x, y, color) cat_draw_text((font), T(text), (x), (y), (color))
+#define cat_measure_text(font, text) cat_measure_text((font), T(text))
+#define cat_draw_footer(footer, count) (fz_i18n_footer((footer), (count)), cat_draw_footer((footer), (count)))
 
 #define MAX_PATH_LEN 1280
 #define MAX_PARAMS   8
@@ -94,29 +108,29 @@ static fugazi_state state;
 static void init_params(void)
 {
     int i = 0;
-    state.params[i++] = (fugazi_param){ .name="CURVATURE", .label="Curvature",
-        .description="Screen edge bend", .value=0.06f, .clear_val=0.0f,
+    state.params[i++] = (fugazi_param){ .name="CURVATURE", .label=T("Curvature"),
+        .description=T("Screen edge bend"), .value=0.06f, .clear_val=0.0f,
         .min=0.0f, .max=0.25f, .step=0.01f, .shader=0 };
-    state.params[i++] = (fugazi_param){ .name="GLOW_MIX", .label="Glow",
-        .description="Soft light bleed", .value=0.35f, .clear_val=0.0f,
+    state.params[i++] = (fugazi_param){ .name="GLOW_MIX", .label=T("Glow"),
+        .description=T("Soft light bleed"), .value=0.35f, .clear_val=0.0f,
         .min=0.0f, .max=0.8f, .step=0.05f, .shader=0 };
-    state.params[i++] = (fugazi_param){ .name="SCANLINE_WEIGHT", .label="Scanlines",
-        .description="Dark line strength", .value=0.55f, .clear_val=0.0f,
+    state.params[i++] = (fugazi_param){ .name="SCANLINE_WEIGHT", .label=T("Scanlines"),
+        .description=T("Dark line strength"), .value=0.55f, .clear_val=0.0f,
         .min=0.0f, .max=1.0f, .step=0.05f, .shader=1 };
-    state.params[i++] = (fugazi_param){ .name="SCANLINE_GAP", .label="Gap Darkness",
-        .description="Floor between lines", .value=0.55f, .clear_val=1.0f,
+    state.params[i++] = (fugazi_param){ .name="SCANLINE_GAP", .label=T("Gap Darkness"),
+        .description=T("Floor between lines"), .value=0.55f, .clear_val=1.0f,
         .min=0.0f, .max=1.0f, .step=0.05f, .shader=1 };
-    state.params[i++] = (fugazi_param){ .name="MASK_STRENGTH", .label="Phosphor Mask",
-        .description="Vertical grille lines", .value=0.30f, .clear_val=0.0f,
+    state.params[i++] = (fugazi_param){ .name="MASK_STRENGTH", .label=T("Phosphor Mask"),
+        .description=T("Vertical grille lines"), .value=0.30f, .clear_val=0.0f,
         .min=0.0f, .max=0.6f, .step=0.05f, .shader=1 };
-    state.params[i++] = (fugazi_param){ .name="VIGNETTE", .label="Vignette",
-        .description="Edge darkening", .value=0.20f, .clear_val=0.0f,
+    state.params[i++] = (fugazi_param){ .name="VIGNETTE", .label=T("Vignette"),
+        .description=T("Edge darkening"), .value=0.20f, .clear_val=0.0f,
         .min=0.0f, .max=0.6f, .step=0.05f, .shader=1 };
-    state.params[i++] = (fugazi_param){ .name="BRIGHTNESS", .label="Brightness",
-        .description="Output gain", .value=1.10f, .clear_val=1.0f,
+    state.params[i++] = (fugazi_param){ .name="BRIGHTNESS", .label=T("Brightness"),
+        .description=T("Output gain"), .value=1.10f, .clear_val=1.0f,
         .min=0.5f, .max=1.6f, .step=0.05f, .shader=1 };
-    state.params[i++] = (fugazi_param){ .name="WARMTH", .label="Warmth",
-        .description="Warm color tint", .value=0.05f, .clear_val=0.0f,
+    state.params[i++] = (fugazi_param){ .name="WARMTH", .label=T("Warmth"),
+        .description=T("Warm color tint"), .value=0.05f, .clear_val=0.0f,
         .min=0.0f, .max=0.3f, .step=0.02f, .shader=1 };
     state.param_count = i;
 }
@@ -625,14 +639,14 @@ static void refresh_preset_status(void)
 static const char *preset_status_text(void)
 {
     switch (state.preset.state) {
-    case FZ_STATE_ABSENT:         return "Not applied";
-    case FZ_STATE_OWNED:          return "Applied globally";
-    case FZ_STATE_OWNED_BACKUP:   return "Applied globally — previous shader preserved";
-    case FZ_STATE_FOREIGN:        return "Another global shader is active";
-    case FZ_STATE_FOREIGN_BACKUP: return "State needs attention";
-    case FZ_STATE_INVALID:        return "State needs attention";
+    case FZ_STATE_ABSENT:         return T("Not applied");
+    case FZ_STATE_OWNED:          return T("Applied globally");
+    case FZ_STATE_OWNED_BACKUP:   return T("Applied globally — previous shader preserved");
+    case FZ_STATE_FOREIGN:        return T("Another global shader is active");
+    case FZ_STATE_FOREIGN_BACKUP: return T("State needs attention");
+    case FZ_STATE_INVALID:        return T("State needs attention");
     }
-    return "State needs attention";
+    return T("State needs attention");
 }
 
 /* Shorter wording for the one status that can outrun a narrow screen. Only
@@ -641,7 +655,7 @@ static const char *preset_status_text(void)
 static const char *preset_status_text_short(void)
 {
     if (state.preset.state == FZ_STATE_OWNED_BACKUP)
-        return "Applied globally — 1 preset saved";
+        return T("Applied globally — 1 preset saved");
     return preset_status_text();
 }
 
@@ -650,9 +664,9 @@ static const char *preset_action_label(void)
 {
     switch (state.preset.state) {
     case FZ_STATE_OWNED:
-    case FZ_STATE_OWNED_BACKUP:   return "Remove";
+    case FZ_STATE_OWNED_BACKUP:   return T("Remove");
     case FZ_STATE_FOREIGN_BACKUP:
-    case FZ_STATE_INVALID:        return "Resolve";
+    case FZ_STATE_INVALID:        return T("Resolve");
     default:                      return NULL;
     }
 }
@@ -670,7 +684,7 @@ static void show_message(const char *msg)
 static bool confirm_action(const char *msg, const char *confirm_label)
 {
     cat_footer_item footer[2] = {
-        { .button = CAT_BTN_B, .label = "Cancel" },
+        { .button = CAT_BTN_B, .label = T("Cancel") },
         { .button = CAT_BTN_A, .label = confirm_label, .is_confirm = true },
     };
     cat_message_opts opts = { .message = msg, .footer = footer, .footer_count = 2 };
@@ -684,11 +698,11 @@ static bool confirm_action(const char *msg, const char *confirm_label)
 static const char *preset_error_text(fz_result r)
 {
     switch (r) {
-    case FZ_ERR_PATH:  return "Couldn't update RetroArch's shader settings:\na system path was too long. Nothing changed.";
-    case FZ_ERR_IO:    return "Couldn't update RetroArch's shader settings.\nNothing was changed.";
-    case FZ_NOT_OWNED: return "Fugazi did not install the global shader that is\nactive, so it will not remove it.";
-    case FZ_ABSENT:    return "Fugazi is not applied.";
-    default:           return "Couldn't update RetroArch's shader settings.";
+    case FZ_ERR_PATH:  return T("Couldn't update RetroArch's shader settings:\na system path was too long. Nothing changed.");
+    case FZ_ERR_IO:    return T("Couldn't update RetroArch's shader settings.\nNothing was changed.");
+    case FZ_NOT_OWNED: return T("Fugazi did not install the global shader that is\nactive, so it will not remove it.");
+    case FZ_ABSENT:    return T("Fugazi is not applied.");
+    default:           return T("Couldn't update RetroArch's shader settings.");
     }
 }
 
@@ -699,28 +713,26 @@ static const char *preset_error_text(fz_result r)
 static void run_conflict_resolver(void)
 {
     if (!state.preset_paths_ok) {
-        show_message("Couldn't locate RetroArch's shader settings.\nNothing was changed.");
+        show_message(T("Couldn't locate RetroArch's shader settings.\nNothing was changed."));
         return;
     }
     if (state.preset.state != FZ_STATE_FOREIGN_BACKUP) {
-        show_message("Fugazi couldn't read RetroArch's global shader\npreset. Check the file in RetroArch, then try again.");
+        show_message(T("Fugazi couldn't read RetroArch's global shader\npreset. Check the file in RetroArch, then try again."));
         return;
     }
 
     cat_selection_option options[] = {
-        { .label = "Keep current",     .value = "Discard Fugazi's saved backup" },
-        { .label = "Restore previous", .value = "Discard the preset now in place" },
-        { .label = "Cancel",           .value = "Change nothing" },
+        { .label = T("Keep current"),     .value = T("Discard Fugazi's saved backup") },
+        { .label = T("Restore previous"), .value = T("Discard the preset now in place") },
+        { .label = T("Cancel"),           .value = T("Change nothing") },
     };
     cat_footer_item footer[2] = {
-        { .button = CAT_BTN_B, .label = "Cancel" },
-        { .button = CAT_BTN_A, .label = "Choose", .is_confirm = true },
+        { .button = CAT_BTN_B, .label = T("Cancel") },
+        { .button = CAT_BTN_A, .label = T("Choose"), .is_confirm = true },
     };
     cat_selection_result sel;
     int rc = cat_selection(
-        "A global shader preset that Fugazi did not install is\n"
-        "active, and Fugazi still holds a backup of an earlier\n"
-        "one. Only one can be kept.",
+        T("A global shader preset that Fugazi did not install is\nactive, and Fugazi still holds a backup of an earlier\none. Only one can be kept."),
         options, 3, footer, 2, &sel);
 
     if (rc != CAT_OK || sel.selected_index == 2) return;  /* Cancel touches nothing */
@@ -728,19 +740,14 @@ static void run_conflict_resolver(void)
     fz_result r;
     if (sel.selected_index == 0) {
         if (!confirm_action(
-                "Keep the preset that is active now?\n\n"
-                "Fugazi's backup of the earlier preset will be\n"
-                "deleted. This cannot be undone.", "Delete backup"))
+                T("Keep the preset that is active now?\n\nFugazi's backup of the earlier preset will be\ndeleted. This cannot be undone."), T("Delete backup")))
             return;
         r = fz_preset_keep_current(state.global_path, state.backup_path);
     } else {
         /* The stronger confirmation: this one overwrites a file the user may
            have saved from inside RetroArch minutes ago. */
         if (!confirm_action(
-                "Restore the earlier preset?\n\n"
-                "The global shader preset that is active now will be\n"
-                "REPLACED by Fugazi's backup and cannot be\n"
-                "recovered. Restore it?", "Replace"))
+                T("Restore the earlier preset?\n\nThe global shader preset that is active now will be\nREPLACED by Fugazi's backup and cannot be\nrecovered. Restore it?"), T("Replace")))
             return;
         r = fz_preset_restore_previous(state.global_path, state.backup_path);
     }
@@ -749,7 +756,7 @@ static void run_conflict_resolver(void)
     cat_log("fugazi: resolver action %d -> result %d, state %d",
             sel.selected_index, (int)r, (int)state.preset.state);
     show_message(r == FZ_OK
-        ? "Done. Fugazi is not applied — press A to apply it."
+        ? T("Done. Fugazi is not applied — press A to apply it.")
         : preset_error_text(r));
 }
 
@@ -764,7 +771,7 @@ static void apply_to_system(void)
     refresh_preset_status();
 
     if (!state.preset_paths_ok) {
-        show_message("Couldn't locate RetroArch's shader settings.\nNothing was changed.");
+        show_message(T("Couldn't locate RetroArch's shader settings.\nNothing was changed."));
         return;
     }
     /* Fail closed before writing anything: this state has no safe Apply. */
@@ -782,18 +789,18 @@ static void apply_to_system(void)
         fz_path(dst_glow, sizeof(dst_glow), "%s/fugazi-glow.glsl", shader_dir) != 0 ||
         fz_path(dst_scan, sizeof(dst_scan), "%s/fugazi-scanline.glsl", shader_dir) != 0) {
         cat_log("fugazi: apply failed - a system path was too long");
-        show_message("Apply failed: a system path was too long.");
+        show_message(T("Apply failed: a system path was too long."));
         return;
     }
 
     mkdir_p(shader_dir);
     if (bake_shader(src_glow, dst_glow) != 0 || bake_shader(src_scan, dst_scan) != 0) {
         cat_log("fugazi: apply failed baking shaders (pak_dir=%s)", state.pak_dir);
-        show_message("Apply failed: couldn't write the shader files.");
+        show_message(T("Apply failed: couldn't write the shader files."));
         return;
     }
     if (write_glslp(glslp) != 0) {
-        show_message("Apply failed: couldn't write the preset.");
+        show_message(T("Apply failed: couldn't write the preset."));
         return;
     }
 
@@ -806,9 +813,7 @@ static void apply_to_system(void)
     fz_result r = fz_preset_install(state.global_path, state.backup_path, false);
     if (r == FZ_NEEDS_CONFIRM) {
         if (!confirm_action(
-                "Another global shader preset is already active.\n\n"
-                "Apply Fugazi and replace it? Fugazi keeps one copy\n"
-                "of that preset so you can restore it later.", "Replace"))
+                T("Another global shader preset is already active.\n\nApply Fugazi and replace it? Fugazi keeps one copy\nof that preset so you can restore it later."), T("Replace")))
             return;
         r = fz_preset_install(state.global_path, state.backup_path, true);
     }
@@ -824,12 +829,9 @@ static void apply_to_system(void)
     if (r != FZ_OK) {
         show_message(preset_error_text(r));
     } else if (state.preset.state == FZ_STATE_OWNED_BACKUP) {
-        show_message("Applied. Your CRT shader is now active in\n"
-                     "RetroArch — launch a game to see it.\n\n"
-                     "The preset it replaced is saved; Remove restores it.");
+        show_message(T("Applied. Your CRT shader is now active in\nRetroArch — launch a game to see it.\n\nThe preset it replaced is saved; Remove restores it."));
     } else {
-        show_message("Applied. Your CRT shader is now active in\n"
-                     "RetroArch — launch a game to see it.");
+        show_message(T("Applied. Your CRT shader is now active in\nRetroArch — launch a game to see it."));
     }
 }
 
@@ -839,33 +841,27 @@ static void remove_from_system(void)
     refresh_preset_status();
 
     if (!state.preset_paths_ok) {
-        show_message("Couldn't locate RetroArch's shader settings.\nNothing was changed.");
+        show_message(T("Couldn't locate RetroArch's shader settings.\nNothing was changed."));
         return;
     }
 
     switch (state.preset.state) {
     case FZ_STATE_ABSENT:
-        show_message("Fugazi is not applied.");
+        show_message(T("Fugazi is not applied."));
         return;
     case FZ_STATE_FOREIGN:
-        show_message("Another global shader preset is active and Fugazi\n"
-                     "did not install it, so Fugazi will not remove it.\n\n"
-                     "Remove it in RetroArch under Shaders.");
+        show_message(T("Another global shader preset is active and Fugazi\ndid not install it, so Fugazi will not remove it.\n\nRemove it in RetroArch under Shaders."));
         return;
     case FZ_STATE_FOREIGN_BACKUP:
     case FZ_STATE_INVALID:
         run_conflict_resolver();
         return;
     case FZ_STATE_OWNED:
-        if (!confirm_action("Remove Fugazi's shader?\n\n"
-                            "No global shader will be applied in RetroArch\n"
-                            "afterwards.", "Remove"))
+        if (!confirm_action(T("Remove Fugazi's shader?\n\nNo global shader will be applied in RetroArch\nafterwards."), T("Remove")))
             return;
         break;
     case FZ_STATE_OWNED_BACKUP:
-        if (!confirm_action("Remove Fugazi's shader?\n\n"
-                            "The global shader preset that Fugazi replaced\n"
-                            "will be restored in its place.", "Remove"))
+        if (!confirm_action(T("Remove Fugazi's shader?\n\nThe global shader preset that Fugazi replaced\nwill be restored in its place."), T("Remove")))
             return;
         break;
     }
@@ -879,14 +875,15 @@ static void remove_from_system(void)
         show_message(preset_error_text(r));
     else
         show_message(had_backup
-            ? "Removed. The global shader preset Fugazi replaced\nis active again."
-            : "Removed. No global shader is applied in RetroArch.");
+            ? T("Removed. The global shader preset Fugazi replaced\nis active again.")
+            : T("Removed. No global shader is applied in RetroArch."));
 }
 
 /* --------------------------------------------------------------------- main */
 
 int main(int argc, char *argv[])
 {
+    fz_i18n_init(getenv("FUGAZI_PAK_DIR"));
     (void)argc; (void)argv;
     memset(&state, 0, sizeof(state));
 
@@ -897,7 +894,7 @@ int main(int argc, char *argv[])
     init_params();
 
     cat_config cfg = {
-        .window_title = "Fugazi",
+        .window_title = T("Fugazi"),
         .log_path     = cat_resolve_log_path("fugazi"),
         .cpu_speed    = CAT_CPU_SPEED_NORMAL,
     };
@@ -985,7 +982,7 @@ int main(int argc, char *argv[])
                 SDL_RenderCopy(renderer, tex, NULL, &dst);
             }
         } else {
-            const char *msg = "Preview not available";
+            const char *msg = T("Preview not available");
             int mw = cat_measure_text(font_small, msg);
             cat_draw_text(font_small, msg, (sw - mw) / 2, sh / 2, theme->hint);
         }
@@ -1032,22 +1029,22 @@ int main(int argc, char *argv[])
 
         /* footer hints (only when the launcher has hints enabled) */
         if (show_hints) {
-            /* "Reset" because Y only resets the tuning values; the action that
+            /* T("Reset") because Y only resets the tuning values; the action that
                uninstalls is START, and the two must not read as the same thing. */
             cat_footer_item footer[5];
             int fc = 0;
-            footer[fc++] = (cat_footer_item){ .button = CAT_BTN_B, .label = "Quit" };
-            footer[fc++] = (cat_footer_item){ .button = CAT_BTN_Y, .label = "Reset" };
+            footer[fc++] = (cat_footer_item){ .button = CAT_BTN_B, .label = T("Quit") };
+            footer[fc++] = (cat_footer_item){ .button = CAT_BTN_Y, .label = T("Reset") };
             /* Short labels: with the START action present these must all fit,
                or Catastrophe collapses the overflow into a "+1" chip and the
                Remove hint becomes invisible -- which is the one hint that must
                always be visible. */
             footer[fc++] = (cat_footer_item){ .button = CAT_BTN_X,
-                .label = state.use_test_pattern ? "Image" : "Pattern" };
+                .label = state.use_test_pattern ? T("Image") : T("Pattern") };
             const char *action = preset_action_label();
             if (action)
                 footer[fc++] = (cat_footer_item){ .button = CAT_BTN_START, .label = action };
-            footer[fc++] = (cat_footer_item){ .button = CAT_BTN_A, .label = "Apply", .is_confirm = true };
+            footer[fc++] = (cat_footer_item){ .button = CAT_BTN_A, .label = T("Apply"), .is_confirm = true };
             cat_draw_footer(footer, fc);
         }
 
